@@ -74,6 +74,9 @@ class CryptographyApp:
                                    style="Subtitle.TLabel")
         subtitle_label.grid(row=1, column=0, pady=(0, 20), sticky=tk.W)
         
+        # Status/Log Area (create first so log() can be called)
+        self.create_status_area(main_frame, row=6)
+        
         # Cipher Selection
         self.create_cipher_selection(main_frame, row=2)
         
@@ -85,9 +88,6 @@ class CryptographyApp:
         
         # Action Buttons
         self.create_action_buttons(main_frame, row=5)
-        
-        # Status/Log Area
-        self.create_status_area(main_frame, row=6)
         
     def create_cipher_selection(self, parent, row):
         """Create cipher selection section"""
