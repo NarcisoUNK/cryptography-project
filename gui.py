@@ -242,8 +242,8 @@ class CryptographyApp:
                                 "DES: Exactly 8 bytes\n" +
                                 "Vigenère: Any alphabetic key")
         
-        key_entry = ttk.Entry(frame, textvariable=self.key_file_path, state="readonly")
-        key_entry.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=10, pady=5)
+        self.key_entry = ttk.Entry(frame, textvariable=self.key_file_path, state="readonly")
+        self.key_entry.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=10, pady=5)
         
         self.key_btn = ttk.Button(frame, text="Browse...", command=self.browse_key_file)
         self.key_btn.grid(row=current_row, column=2, pady=5)
@@ -257,8 +257,8 @@ class CryptographyApp:
                                   "Playfair: 5x5 matrix (25 chars, no J)\n" +
                                   "Vigenère: 26x26 table (676 chars)")
         
-        table_entry = ttk.Entry(frame, textvariable=self.table_file_path, state="readonly")
-        table_entry.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=10, pady=5)
+        self.table_entry = ttk.Entry(frame, textvariable=self.table_file_path, state="readonly")
+        self.table_entry.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=10, pady=5)
         
         self.table_btn = ttk.Button(frame, text="Browse...", command=self.browse_table_file)
         self.table_btn.grid(row=current_row, column=2, pady=5)
@@ -349,17 +349,42 @@ class CryptographyApp:
                 selectforeground="#ffffff"
             )
     
+    def show_key_row(self):
+        """Show the key file row"""
+        self.key_label.grid()
+        self.key_entry.grid()
+        self.key_btn.grid()
+
+    def hide_key_row(self, clear: bool = True):
+        """Hide the key file row and optionally clear its value"""
+        self.key_label.grid_remove()
+        self.key_entry.grid_remove()
+        self.key_btn.grid_remove()
+        if clear:
+            self.key_file_path.set("")
+
+    def show_table_row(self):
+        """Show the table file row"""
+        self.table_label.grid()
+        self.table_entry.grid()
+        self.table_btn.grid()
+
+    def hide_table_row(self, clear: bool = True):
+        """Hide the table file row and optionally clear its value"""
+        self.table_label.grid_remove()
+        self.table_entry.grid_remove()
+        self.table_btn.grid_remove()
+        if clear:
+            self.table_file_path.set("")
+
     def on_cipher_change(self):
-        """Handle cipher type change"""
+        """Handle cipher type change by showing/hiding relevant file choosers"""
         cipher = self.cipher_type.get()
         
         # AES and DES: Show key, hide table
         if cipher in ["AES", "DES"]:
-            self.key_label.grid()
-            self.key_btn.grid()
-            self.table_label.grid_remove()
-            self.table_btn.grid_remove()
-            
+            self.show_key_row()
+            self.hide_table_row(clear=True)
             if cipher == "AES":
                 self.log("AES selected: Key must be 16, 24, or 32 bytes")
             else:
@@ -367,18 +392,14 @@ class CryptographyApp:
         
         # Playfair: Show table, hide key
         elif cipher == "PLAYFAIR":
-            self.key_label.grid_remove()
-            self.key_btn.grid_remove()
-            self.table_label.grid()
-            self.table_btn.grid()
+            self.hide_key_row(clear=True)
+            self.show_table_row()
             self.log("Playfair selected: Table file required (5x5 matrix)")
         
         # Vigenere: Show both key and table
         elif cipher == "VIGENERE":
-            self.key_label.grid()
-            self.key_btn.grid()
-            self.table_label.grid()
-            self.table_btn.grid()
+            self.show_key_row()
+            self.show_table_row()
             self.log("Vigenère selected: Table file (26x26) and key file required")
                 
     def browse_key_file(self):
