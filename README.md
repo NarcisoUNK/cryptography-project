@@ -71,6 +71,16 @@ Example files are provided in the `examples/` directory:
 - `plaintext.txt` - Sample plaintext
 - `test_file.txt` - Sample file for encryption
 
+### Quick Test Script
+
+Run a non-interactive script that exercises all ciphers using the example files and writes outputs to `examples/output/`:
+
+```bash
+python examples/test_ciphers.py
+```
+
+See additional notes in `examples/README.md`.
+
 ## Team
 
 Collaborative project for cryptography implementation and analysis.
