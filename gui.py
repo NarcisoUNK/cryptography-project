@@ -59,73 +59,98 @@ class CryptographyApp:
         self.output_file_path = tk.StringVar()
         self.cipher_type = tk.StringVar(value="AES")
         self.operation_type = tk.StringVar(value="encrypt")
+        self.theme_mode = tk.StringVar(value="dark")
         
         # Build UI
         self.create_widgets()
         
     def setup_style(self):
-        """Configure modern dark mode styling"""
+        """Configure styling based on theme"""
+        self.apply_theme()
+    
+    def apply_theme(self):
+        """Apply theme colors and styles"""
         style = ttk.Style()
         style.theme_use('clam')
         
-        # Dark mode colors
-        bg_dark = "#1e1e1e"
-        bg_darker = "#252526"
-        bg_lighter = "#2d2d30"
-        fg_primary = "#e4e4e4"
-        fg_secondary = "#b0b0b0"
-        accent_blue = "#0078d4"
-        accent_green = "#16c60c"
-        accent_red = "#e81123"
-        border_color = "#3e3e42"
+        is_dark = self.theme_mode.get() == "dark"
+        
+        if is_dark:
+            # Dark mode colors
+            bg_main = "#1e1e1e"
+            bg_secondary = "#252526"
+            bg_input = "#2d2d30"
+            fg_primary = "#e4e4e4"
+            fg_secondary = "#b0b0b0"
+            accent_color = "#0078d4"
+            border_color = "#3e3e42"
+            log_bg = "#1e1e1e"
+            log_fg = "#d4d4d4"
+        else:
+            # Light mode colors
+            bg_main = "#f3f3f3"
+            bg_secondary = "#ffffff"
+            bg_input = "#ffffff"
+            fg_primary = "#1e1e1e"
+            fg_secondary = "#616161"
+            accent_color = "#0078d4"
+            border_color = "#d0d0d0"
+            log_bg = "#ffffff"
+            log_fg = "#1e1e1e"
         
         # Configure root
-        self.root.configure(bg=bg_dark)
+        self.root.configure(bg=bg_main)
         
         # Frame styles
-        style.configure("TFrame", background=bg_dark)
-        style.configure("TLabelframe", background=bg_dark, 
+        style.configure("TFrame", background=bg_main)
+        style.configure("TLabelframe", background=bg_main, 
                        foreground=fg_primary, bordercolor=border_color,
                        relief="solid")
-        style.configure("TLabelframe.Label", background=bg_dark, 
+        style.configure("TLabelframe.Label", background=bg_main, 
                        foreground=fg_primary, font=("Segoe UI", 10, "bold"))
         
         # Label styles
         style.configure("Title.TLabel", font=("Segoe UI", 26, "bold"), 
-                       foreground=accent_blue, background=bg_dark)
+                       foreground=accent_color, background=bg_main)
         style.configure("Subtitle.TLabel", font=("Segoe UI", 11), 
-                       foreground=fg_secondary, background=bg_dark)
+                       foreground=fg_secondary, background=bg_main)
         style.configure("Header.TLabel", font=("Segoe UI", 10, "bold"), 
-                       foreground=fg_primary, background=bg_dark)
+                       foreground=fg_primary, background=bg_main)
         style.configure("TLabel", font=("Segoe UI", 9), 
-                       foreground=fg_primary, background=bg_dark)
+                       foreground=fg_primary, background=bg_main)
         
         # Button styles
         style.configure("TButton", font=("Segoe UI", 10), padding=10,
-                       background=bg_lighter, foreground=fg_primary,
+                       background=bg_input, foreground=fg_primary,
                        bordercolor=border_color, borderwidth=1)
         style.map("TButton",
-                 background=[("active", bg_darker), ("pressed", bg_darker)],
+                 background=[("active", bg_secondary), ("pressed", bg_secondary)],
                  foreground=[("active", fg_primary)])
         
         style.configure("Accent.TButton", font=("Segoe UI", 11, "bold"),
-                       background=accent_blue, foreground="#ffffff", padding=12)
+                       background=accent_color, foreground="#ffffff", padding=12)
         style.map("Accent.TButton",
                  background=[("active", "#005a9e"), ("pressed", "#004578")])
         
         # Entry styles
-        style.configure("TEntry", fieldbackground=bg_lighter, 
+        style.configure("TEntry", fieldbackground=bg_input, 
                        foreground=fg_primary, bordercolor=border_color,
                        insertcolor=fg_primary)
         
         # Radiobutton styles
         style.configure("TRadiobutton", font=("Segoe UI", 10),
-                       background=bg_dark, foreground=fg_primary,
-                       indicatorbackground=bg_lighter,
-                       indicatorforeground=accent_blue)
+                       background=bg_main, foreground=fg_primary,
+                       indicatorbackground=bg_input,
+                       indicatorforeground=accent_color)
         style.map("TRadiobutton",
-                 background=[("active", bg_dark)],
-                 foreground=[("active", accent_blue)])
+                 background=[("active", bg_main)],
+                 foreground=[("active", accent_color)])
+        
+        # Store colors for later use
+        self.current_colors = {
+            'log_bg': log_bg,
+            'log_fg': log_fg
+        }
         
     def create_widgets(self):
         """Create all UI components"""
@@ -141,10 +166,19 @@ class CryptographyApp:
         title_label = ttk.Label(main_frame, text="🔐 Cryptography Suite", style="Title.TLabel")
         title_label.grid(row=0, column=0, pady=(0, 5), sticky=tk.W)
         
-        subtitle_label = ttk.Label(main_frame, 
+        subtitle_frame = ttk.Frame(main_frame)
+        subtitle_frame.grid(row=1, column=0, pady=(0, 20), sticky=(tk.W, tk.E))
+        subtitle_frame.columnconfigure(0, weight=1)
+        
+        subtitle_label = ttk.Label(subtitle_frame, 
                                    text="Professional encryption and decryption tool",
                                    style="Subtitle.TLabel")
-        subtitle_label.grid(row=1, column=0, pady=(0, 20), sticky=tk.W)
+        subtitle_label.grid(row=0, column=0, sticky=tk.W)
+        
+        # Theme switcher
+        theme_btn = ttk.Button(subtitle_frame, text="☼ Theme", 
+                              command=self.toggle_theme, width=10)
+        theme_btn.grid(row=0, column=1, sticky=tk.E, padx=5)
         
         # Status/Log Area (create first so log() can be called)
         self.create_status_area(main_frame, row=6)
@@ -284,46 +318,68 @@ class CryptographyApp:
         self.status_text = scrolledtext.ScrolledText(frame, height=10, width=80,
                                                      font=("Consolas", 9),
                                                      wrap=tk.WORD,
-                                                     bg="#1e1e1e",
-                                                     fg="#d4d4d4",
-                                                     insertbackground="#ffffff",
-                                                     selectbackground="#264f78",
-                                                     selectforeground="#ffffff",
                                                      relief="flat",
                                                      borderwidth=0)
+        self.update_status_colors()
         self.status_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         frame.columnconfigure(0, weight=1)
         frame.rowconfigure(0, weight=1)
         
-        self.log("✨ Application ready. Select a cipher and configure files.")
+        self.log("Application ready. Select a cipher and configure files.")
         
+    def toggle_theme(self):
+        """Toggle between light and dark themes"""
+        if self.theme_mode.get() == "dark":
+            self.theme_mode.set("light")
+        else:
+            self.theme_mode.set("dark")
+        
+        self.apply_theme()
+        self.update_status_colors()
+        self.log(f"Theme switched to {self.theme_mode.get()} mode")
+    
+    def update_status_colors(self):
+        """Update status text widget colors"""
+        if hasattr(self, 'status_text') and hasattr(self, 'current_colors'):
+            self.status_text.config(
+                bg=self.current_colors['log_bg'],
+                fg=self.current_colors['log_fg'],
+                insertbackground=self.current_colors['log_fg'],
+                selectbackground="#264f78" if self.theme_mode.get() == "dark" else "#0078d4",
+                selectforeground="#ffffff"
+            )
+    
     def on_cipher_change(self):
         """Handle cipher type change"""
         cipher = self.cipher_type.get()
         
-        # Show/hide table file based on cipher type
-        if cipher in ["PLAYFAIR", "VIGENERE"]:
-            self.table_label.grid()
-            self.table_btn.grid()
-            
-            if cipher == "PLAYFAIR":
-                self.key_label.grid_remove()
-                self.key_btn.grid_remove()
-                self.log("🔑 Playfair selected: Table file required (5x5 matrix)")
-            else:
-                self.key_label.grid()
-                self.key_btn.grid()
-                self.log("🔑 Vigenère selected: Table file (26x26) and key file required")
-        else:
-            self.table_label.grid_remove()
-            self.table_btn.grid_remove()
+        # AES and DES: Show key, hide table
+        if cipher in ["AES", "DES"]:
             self.key_label.grid()
             self.key_btn.grid()
+            self.table_label.grid_remove()
+            self.table_btn.grid_remove()
             
             if cipher == "AES":
-                self.log("🔒 AES selected: Key must be 16, 24, or 32 bytes")
+                self.log("AES selected: Key must be 16, 24, or 32 bytes")
             else:
-                self.log("🔒 DES selected: Key must be exactly 8 bytes")
+                self.log("DES selected: Key must be exactly 8 bytes")
+        
+        # Playfair: Show table, hide key
+        elif cipher == "PLAYFAIR":
+            self.key_label.grid_remove()
+            self.key_btn.grid_remove()
+            self.table_label.grid()
+            self.table_btn.grid()
+            self.log("Playfair selected: Table file required (5x5 matrix)")
+        
+        # Vigenere: Show both key and table
+        elif cipher == "VIGENERE":
+            self.key_label.grid()
+            self.key_btn.grid()
+            self.table_label.grid()
+            self.table_btn.grid()
+            self.log("Vigenère selected: Table file (26x26) and key file required")
                 
     def browse_key_file(self):
         """Browse for key file"""
@@ -333,7 +389,7 @@ class CryptographyApp:
         )
         if filename:
             self.key_file_path.set(filename)
-            self.log(f"📄 Key file selected: {os.path.basename(filename)}")
+            self.log(f"Key file selected: {os.path.basename(filename)}")
             
     def browse_table_file(self):
         """Browse for table file"""
@@ -343,7 +399,7 @@ class CryptographyApp:
         )
         if filename:
             self.table_file_path.set(filename)
-            self.log(f"📄 Table file selected: {os.path.basename(filename)}")
+            self.log(f"Table file selected: {os.path.basename(filename)}")
             
     def browse_input_file(self):
         """Browse for input file"""
@@ -353,7 +409,7 @@ class CryptographyApp:
         )
         if filename:
             self.input_file_path.set(filename)
-            self.log(f"📝 Input file selected: {os.path.basename(filename)}")
+            self.log(f"Input file selected: {os.path.basename(filename)}")
             
     def browse_output_file(self):
         """Browse for output file"""
@@ -363,7 +419,7 @@ class CryptographyApp:
         )
         if filename:
             self.output_file_path.set(filename)
-            self.log(f"💾 Output file selected: {os.path.basename(filename)}")
+            self.log(f"Output file selected: {os.path.basename(filename)}")
             
     def log(self, message):
         """Add message to status log"""
@@ -381,7 +437,7 @@ class CryptographyApp:
         self.table_file_path.set("")
         self.input_file_path.set("")
         self.output_file_path.set("")
-        self.log("🧹 All fields cleared")
+        self.log("All fields cleared")
         
     def execute_operation(self):
         """Execute the selected cryptographic operation"""
@@ -397,7 +453,7 @@ class CryptographyApp:
             messagebox.showerror("Error", "Please select an output file")
             return
         
-        self.log(f"⏳ Starting {operation} operation with {cipher}...")
+        self.log(f"Starting {operation} operation with {cipher}...")
         
         try:
             if cipher == "AES":
@@ -409,12 +465,12 @@ class CryptographyApp:
             elif cipher == "VIGENERE":
                 self.execute_vigenere()
                 
-            self.log(f"✅ Operation completed successfully!")
+            self.log("Operation completed successfully!")
             messagebox.showinfo("Success", 
                               f"File {operation}ed successfully!\n\nOutput: {os.path.basename(self.output_file_path.get())}")
             
         except Exception as e:
-            self.log(f"❌ Error: {str(e)}")
+            self.log(f"Error: {str(e)}")
             messagebox.showerror("Error", f"Operation failed:\n{str(e)}")
             
     def execute_aes(self):
@@ -438,10 +494,10 @@ class CryptographyApp:
         
         if self.operation_type.get() == "encrypt":
             result = aes.encrypt_file(data)
-            self.log(f"🔒 Encrypted {len(data)} bytes → {len(result)} bytes")
+            self.log(f"Encrypted {len(data)} bytes -> {len(result)} bytes")
         else:
             result = aes.decrypt_file(data)
-            self.log(f"🔓 Decrypted {len(data)} bytes → {len(result)} bytes")
+            self.log(f"Decrypted {len(data)} bytes -> {len(result)} bytes")
         
         # Write output
         with open(self.output_file_path.get(), 'wb') as f:
@@ -468,10 +524,10 @@ class CryptographyApp:
         
         if self.operation_type.get() == "encrypt":
             result = des.encrypt_file(data)
-            self.log(f"🔒 Encrypted {len(data)} bytes → {len(result)} bytes")
+            self.log(f"Encrypted {len(data)} bytes -> {len(result)} bytes")
         else:
             result = des.decrypt_file(data)
-            self.log(f"🔓 Decrypted {len(data)} bytes → {len(result)} bytes")
+            self.log(f"Decrypted {len(data)} bytes -> {len(result)} bytes")
         
         # Write output
         with open(self.output_file_path.get(), 'wb') as f:
@@ -494,10 +550,10 @@ class CryptographyApp:
         
         if self.operation_type.get() == "encrypt":
             result = playfair.encrypt(message)
-            self.log(f"🔑 Encrypted {len(message)} characters → {len(result)} characters")
+            self.log(f"Encrypted {len(message)} characters -> {len(result)} characters")
         else:
             result = playfair.decrypt(message)
-            self.log(f"🔑 Decrypted {len(message)} characters → {len(result)} characters")
+            self.log(f"Decrypted {len(message)} characters -> {len(result)} characters")
         
         # Write output
         with open(self.output_file_path.get(), 'w', encoding='ascii') as f:
@@ -526,10 +582,10 @@ class CryptographyApp:
         
         if self.operation_type.get() == "encrypt":
             result = vigenere.encrypt(message)
-            self.log(f"🔑 Encrypted {len(message)} characters → {len(result)} characters")
+            self.log(f"Encrypted {len(message)} characters -> {len(result)} characters")
         else:
             result = vigenere.decrypt(message)
-            self.log(f"🔑 Decrypted {len(message)} characters → {len(result)} characters")
+            self.log(f"Decrypted {len(message)} characters -> {len(result)} characters")
         
         # Write output
         with open(self.output_file_path.get(), 'w', encoding='ascii') as f:
