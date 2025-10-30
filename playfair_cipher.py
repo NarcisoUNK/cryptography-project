@@ -5,10 +5,14 @@ Classical digraph substitution cipher using a 5x5 matrix
 
 
 class PlayfairCipher:
-    def __init__(self, key):
-        """Initialize Playfair cipher with a key"""
-        self.key = key.upper().replace('J', 'I')
-        self.matrix = self._create_matrix()
+    def __init__(self, key=None, matrix=None):
+        """Initialize Playfair cipher with a key or matrix"""
+        if matrix is not None:
+            self.matrix = matrix
+            self.key = ""
+        else:
+            self.key = key.upper().replace('J', 'I')
+            self.matrix = self._create_matrix()
     
     def _create_matrix(self):
         """Create 5x5 Playfair matrix from key"""
@@ -106,3 +110,20 @@ class PlayfairCipher:
                 plaintext += self.matrix[row2][col1]
         
         return plaintext
+    
+    @classmethod
+    def from_matrix(cls, table_content):
+        """Create PlayfairCipher from a table file content"""
+        # Parse the table - expecting 25 characters (5x5 matrix)
+        # Can be formatted as lines or continuous text
+        chars = ''.join(c.upper() for c in table_content if c.isalpha())
+        
+        if len(chars) != 25:
+            raise ValueError(f"Table must contain exactly 25 alphabetic characters, got {len(chars)}")
+        
+        # Create 5x5 matrix
+        matrix = []
+        for i in range(5):
+            matrix.append(list(chars[i*5:(i+1)*5]))
+        
+        return cls(matrix=matrix)

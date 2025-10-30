@@ -15,7 +15,7 @@ class AESCipher:
         if key is None:
             self.key = get_random_bytes(16)  # AES-128
         else:
-            self.key = key.encode() if isinstance(key, str) else key
+            self.key = key if isinstance(key, bytes) else key.encode()
     
     def encrypt(self, plaintext):
         """Encrypt plaintext using AES in CBC mode"""
@@ -36,3 +36,19 @@ class AESCipher:
             return pt.decode('utf-8')
         except Exception as e:
             return f"Decryption failed: {str(e)}"
+    
+    def encrypt_file(self, data):
+        """Encrypt binary file data"""
+        cipher = AES.new(self.key, AES.MODE_CBC)
+        ct_bytes = cipher.encrypt(pad(data, AES.block_size))
+        # Return IV + ciphertext as binary
+        return cipher.iv + ct_bytes
+    
+    def decrypt_file(self, data):
+        """Decrypt binary file data"""
+        # Extract IV (first 16 bytes) and ciphertext
+        iv = data[:16]
+        ct = data[16:]
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        pt = unpad(cipher.decrypt(ct), AES.block_size)
+        return pt

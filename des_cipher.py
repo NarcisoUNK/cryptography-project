@@ -15,7 +15,7 @@ class DESCipher:
         if key is None:
             self.key = get_random_bytes(8)  # DES key is 8 bytes
         else:
-            self.key = key.encode() if isinstance(key, str) else key
+            self.key = key if isinstance(key, bytes) else key.encode()
             if len(self.key) != 8:
                 raise ValueError("DES key must be exactly 8 bytes")
     
@@ -38,3 +38,19 @@ class DESCipher:
             return pt.decode('utf-8')
         except Exception as e:
             return f"Decryption failed: {str(e)}"
+    
+    def encrypt_file(self, data):
+        """Encrypt binary file data"""
+        cipher = DES.new(self.key, DES.MODE_CBC)
+        ct_bytes = cipher.encrypt(pad(data, DES.block_size))
+        # Return IV + ciphertext as binary
+        return cipher.iv + ct_bytes
+    
+    def decrypt_file(self, data):
+        """Decrypt binary file data"""
+        # Extract IV (first 8 bytes) and ciphertext
+        iv = data[:8]
+        ct = data[8:]
+        cipher = DES.new(self.key, DES.MODE_CBC, iv)
+        pt = unpad(cipher.decrypt(ct), DES.block_size)
+        return pt
