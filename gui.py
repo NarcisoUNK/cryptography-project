@@ -49,10 +49,7 @@ class CryptographyApp:
         self.root.geometry("900x700")
         self.root.resizable(True, True)
         
-        # Configure style
-        self.setup_style()
-        
-        # Variables
+        # Variables (must be set before setup_style)
         self.key_file_path = tk.StringVar()
         self.table_file_path = tk.StringVar()
         self.input_file_path = tk.StringVar()
@@ -60,6 +57,9 @@ class CryptographyApp:
         self.cipher_type = tk.StringVar(value="AES")
         self.operation_type = tk.StringVar(value="encrypt")
         self.theme_mode = tk.StringVar(value="dark")
+        
+        # Configure style
+        self.setup_style()
         
         # Build UI
         self.create_widgets()
