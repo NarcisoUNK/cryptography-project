@@ -23,6 +23,23 @@ pip install -r requirements.txt
 
 ## Usage
 
+### GUI Application (Recommended)
+
+Run the professional graphical interface:
+
+```bash
+python gui.py
+```
+
+Features:
+- 🎨 Modern, intuitive interface
+- 📁 Easy file selection with browse dialogs
+- 📊 Real-time status logging
+- ✅ Input validation and error handling
+- 🔄 Support for all cipher algorithms
+
+### Command Line Interface
+
 ```bash
 python main.py
 ```
